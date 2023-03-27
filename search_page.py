@@ -48,7 +48,7 @@ def content():
 
             for show in series or []:  # iterate over the response data of the api
                 image = [x for x in show['images'] if x['coverType'] == 'poster'][0]
-                with ui.image(image["remoteUrl"]).classes('w-64'):
+                with ui.image(f'/image?path={image["url"]}').classes('w-64'):
                     ui.label(show['title']).classes('absolute-bottom text-subtitle2 text-center')
         running_query = None
 

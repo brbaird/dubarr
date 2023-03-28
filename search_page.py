@@ -48,12 +48,13 @@ def content():
 
             for show in series or []:  # iterate over the response data of the api
                 image = [x for x in show['images'] if x['coverType'] == 'poster'][0]
-                with ui.image(f'/image?path={image["url"]}').classes('w-64'):
+                with ui.image(f'/image?path={image["url"]}').classes('w-36'):
                     ui.label(show['title']).classes('absolute-bottom text-subtitle2 text-center')
         running_query = None
 
     # create a search field which is initially focused and leaves space at the top
     search_field = ui.input(on_change=search) \
         .props('autofocus outlined rounded item-aligned input-class="ml-3"') \
-        .classes('w-96 self-center mt-24 transition-all')
-    results = ui.row()
+        .classes('w-full self-center mt-24 transition-all text-base')
+    results = ui.row() \
+        .classes('flex self-center h-screen justify-center')

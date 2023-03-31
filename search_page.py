@@ -1,14 +1,14 @@
 import asyncio
 
-import httpx
+from aiopyarr.exceptions import ArrException
+from aiopyarr.sonarr_client import SonarrClient
 from fuzzywuzzy import fuzz
 from nicegui import events, ui
 
 import config
+import series_utils as sutils
 
 sonarr_api_url = f'{config.host_url}/api/v3'
-api = httpx.AsyncClient()
-api.headers = {"X-Api-Key": config.api_key}
 running_queries = []
 
 
@@ -20,36 +20,13 @@ def get_series_matches(query, series_list, thresh):
     :param int thresh: The threshold for fuzzy matching. The higher this is, the less will get matched.
     :return: List of series that matched the query.
     """
-    return [x for x in series_list if fuzz.partial_ratio(query.lower(), x['title'].lower()) >= thresh]
-
-
-async def is_dubbed(show):
-    """Returns dub status for an entire show. Will return if a show is fully, partially, or not dubbed."""
-    results = await api.get(f'{sonarr_api_url}/episodefile', params={'seriesId': show['id']})
-    episodes = results.json()
-    dub_status = []
-    for episode in episodes:
-        try:
-            languages = episode['mediaInfo']['audioLanguages'].split(' / ')
-        except KeyError:
-            dub_status.append(False)
-            continue
-        dub_status.append(True if 'English' in languages else False)
-
-    if not episodes:
-        return 'none'
-    if all(dub_status):
-        return 'dubbed'
-    elif not all(dub_status) and any(dub_status):
-        return 'partial'
-    else:
-        return 'none'
+    return [x for x in series_list if fuzz.partial_ratio(query.lower(), x.title.lower()) >= thresh]
 
 
 dub_status_colors = {
-    'dubbed': 'bg-green',
-    'partial': 'bg-orange',
-    'none': 'bg-red',
+    sutils.DubStatus.dubbed: 'bg-green',
+    sutils.DubStatus.partially_dubbed: 'bg-orange',
+    sutils.DubStatus.not_dubbed: 'bg-red',
 }
 
 
@@ -66,28 +43,43 @@ def content():
         results.clear()
 
         # store the http coroutine in a task so we can cancel it later if needed
-        series_query = asyncio.create_task(api.get(f'{sonarr_api_url}/series'))
-        running_queries.append(series_query)
-        response = await series_query
-        if response.text == '':
-            return
+        async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
+            all_series_query = asyncio.create_task(client.async_get_series())
+            running_queries.append(all_series_query)
+            try:
+                all_series = await all_series_query
+            except ArrException:  # Hate this. Needs better solution
+                return
 
         with results:
-            series = get_series_matches(e.value.lower(), response.json(), 75)
+            all_series = get_series_matches(e.value.lower(), all_series, 75)
             # Filter to only anime
             if config.anime_only:
-                series = [x for x in series if x['seriesType'] == 'anime']
+                all_series = [x for x in all_series if x.seriesType == 'anime']
 
-            for show in series or []:  # iterate over the response data of the api
-                image = [x for x in show['images'] if x['coverType'] == 'poster'][0]
+            if not all_series:
+                return
 
-                dubbed_query = asyncio.create_task(is_dubbed(show))
-                running_queries.append(dubbed_query)
-                dubbed = await dubbed_query
+            for series in all_series:  # iterate over the response data of the api
+                image = [x for x in series.images if x.coverType == 'poster'][0]
 
-                color = dub_status_colors[dubbed]
-                with ui.image(f'/image?path={image["url"]}').classes('w-36'):
-                    ui.label(show['title']).classes(f'absolute-bottom text-subtitle2 text-center {color}')
+                async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
+                    single_series_query = asyncio.create_task(sutils.get_series(client, series))
+                    running_queries.append(single_series_query)
+                    try:
+                        s = await single_series_query
+                    except ArrException:  # Hate this. Needs better solution
+                        return
+
+                # Work on progress for season view
+                with ui.dialog() as dialog, ui.card():
+                    ui.label(series.title)
+                    ui.button('Close', on_click=dialog.close)
+
+                color = dub_status_colors[s.dub_status]
+                with ui.button(on_click=dialog.open):
+                    with ui.image(f'/image?path={image.url}').classes('w-36'):
+                        ui.label(series.title).classes(f'absolute-bottom text-subtitle2 text-center {color}')
         running_queries = []
 
     # create a search field which is initially focused and leaves space at the top

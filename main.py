@@ -14,4 +14,4 @@ def index_page():
     search_page.content()
 
 
-ui.run()
+ui.run(dark=True)

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from enum import Enum
 
-from aiopyarr.sonarr_client import SonarrEpisodeFile, SonarrClient, SonarrSeries
+from aiopyarr.sonarr_client import SonarrEpisode, SonarrEpisodeFile, SonarrClient, SonarrSeries
 
 
 class DubStatus(Enum):
@@ -32,8 +32,9 @@ def _check_dub_status(dub_status_list: list[DubStatus]) -> DubStatus:
 class Episode:
     """Holds info about a single episode."""
 
-    def __init__(self, ep_file: SonarrEpisodeFile):
+    def __init__(self, ep_file: SonarrEpisodeFile, ep_info: SonarrEpisode):
         self.ep_file = ep_file
+        self.ep_info = ep_info
 
     @property
     def dub_status(self) -> DubStatus:
@@ -71,10 +72,10 @@ class Season:
 class Series:
     """Holds info about an entire series."""
 
-    def __init__(self, episode_files: list[SonarrEpisodeFile], series_info: SonarrSeries):
-        self.episode_files = episode_files
+    def __init__(self, episodes: list[Episode], series_info: SonarrSeries):
+        self.episodes = episodes
         self.series_info = series_info
-        self.seasons = split_into_seasons(episode_files)
+        self.seasons = split_into_seasons(episodes)
 
     def get_season(self, season_num):
         return self.seasons[season_num]
@@ -99,14 +100,30 @@ def split_into_seasons(all_episodes: list) -> dict[int, Season]:
     seasons = defaultdict(list)
 
     for episode in all_episodes:
-        seasons[episode.seasonNumber].append(Episode(episode))
+        seasons[episode.ep_info.seasonNumber].append(episode)
     for season_num, season_episodes in seasons.items():
         result[season_num] = Season(season_num, season_episodes)
 
     return result
 
 
+def get_episodes(ep_infos: list[SonarrEpisode], ep_files: list[SonarrEpisodeFile]) -> list[Episode]:
+    """
+    Finds episode files for an episode by file id, then places them into an Episode class together.
+    Returns a list of Episode instances.
+    """
+    episode_files_by_id = {x.id: x for x in ep_files}
+    episodes = []
+    for ep in ep_infos:
+        if not ep.hasFile:
+            continue
+        episodes.append(Episode(episode_files_by_id[ep.episodeFileId], ep))
+    return episodes
+
+
 async def get_series(client: SonarrClient, series: SonarrSeries) -> Series:
     """Obtains all episodes for a series, and returns a Series."""
-    episode_files = await client.async_get_episode_files(series.id, series=True)
-    return Series(episode_files, series_info=series)
+    ep_infos = await client.async_get_episodes(series.id, series=True)
+    ep_files = await client.async_get_episode_files(series.id, series=True)
+    episodes = get_episodes(ep_infos, ep_files)
+    return Series(episodes, series_info=series)

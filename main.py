@@ -4,7 +4,7 @@ import config
 import image_api
 import search_page
 
-__version__ = 'v0.0.1'
+__version__ = 'v0.0.2'
 
 
 @app.get('/image')

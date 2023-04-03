@@ -35,13 +35,12 @@ def get_status_color(status: sutils.DubStatus):
 def content():
     """Creates the main page."""
 
-    async def search(e: events.ValueChangeEventArguments) -> None:
+    async def search(e: events.ValueChangeEventArguments | None) -> None:
         """Main searching function. Runs an async request to Sonarr while the user types."""
         global running_queries
         if running_queries:
             for query in running_queries:
                 query.cancel()  # cancel the previous query; happens when you type fast
-        search_field.classes('mt-2', remove='mt-24')  # move the search field up
         results.clear()
 
         # store the http coroutine in a task so we can cancel it later if needed
@@ -54,7 +53,9 @@ def content():
                 return
 
         with results:
-            all_series = get_series_matches(e.value.lower(), all_series, 75)
+            # Filter results to search value
+            if e is not None and e.value:
+                all_series = get_series_matches(e.value.lower(), all_series, 75)
             # Filter to only anime
             if config.anime_only:
                 all_series = [x for x in all_series if x.seriesType == 'anime']
@@ -73,7 +74,6 @@ def content():
                     except ArrException:  # Hate this. Needs better solution
                         return
 
-                # Work on progress for season view
                 with ui.dialog() as dialog, ui.card().classes('flex-nowrap items-stretch flex-auto'):
                     ui.label(series.title)
                     for season_num, season in sorted(s.seasons.items()):
@@ -94,9 +94,19 @@ def content():
                     ui.label(series.title).classes(f'absolute-bottom text-subtitle2 text-center {color}')
         running_queries = []
 
+    # For some reason, we can't just ensure_future here. It needs to be delayed.
+    ui.timer(interval=0.01, callback=lambda: asyncio.ensure_future(search(None)), once=True)
+
     # create a search field which is initially focused and leaves space at the top
-    search_field = ui.input(on_change=search) \
-        .props('autofocus outlined rounded item-aligned input-class="ml-3"') \
-        .classes('w-full self-center mt-24 transition-all text-base')
+    with ui.input(on_change=search, placeholder='Search for a show') \
+            .props('autofocus outlined rounded item-aligned input-class="ml-3"') \
+            .classes('md: w-full w-2/3 self-center mt-2 transition-all text-base') as search_field:
+
+        # Need this in order to clear search field via button
+        def clear_search_field():
+            search_field.value = ''
+
+        ui.icon('clear', color='grey-14').classes('h-screen self-center mr-2 text-4xl hover:cursor-pointer') \
+            .on('click', clear_search_field)
     results = ui.row() \
         .classes('flex self-center justify-center')

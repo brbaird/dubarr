@@ -5,3 +5,5 @@ nicegui~=1.2.2
 fastapi~=0.92.0
 ciso8601~=2.3.0
 python-Levenshtein~=0.20.9
+langcodes~=3.3.0
+language-data~=1.1

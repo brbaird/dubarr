@@ -1,32 +1,33 @@
 from collections import defaultdict
 from enum import Enum
 
+import langcodes
 from aiopyarr.sonarr_client import SonarrEpisode, SonarrEpisodeFile, SonarrClient, SonarrSeries
 
 
-class DubStatus(Enum):
-    not_dubbed = 0  # no episodes are dubbed
-    dubbed = 1  # all episodes are dubbed
-    partially_dubbed = 2  # some episodes are dubbed
+class LangStatus(Enum):
+    none = 0  # no episodes have desired languages
+    all = 1  # all episodes have desired languages
+    some = 2  # some episodes have desired languages
 
 
-def _check_dub_status(dub_status_list: list[DubStatus]) -> DubStatus:
+def _check_lang_status(lang_status_list: list[LangStatus]) -> LangStatus:
     """
-    Checks a list of DubStatuses to return a DubStatus of its own.
-    :param dub_status_list:
-    :return: DubStatus depending on if the whole list is fully dubbed, partially dubbed, or not dubbed.
+    Checks a list of LangStatuses to return a LangStatus of its own.
+    :param lang_status_list: List of LangStatuses
+    :return: LangStatus depending on if the whole list has all, some, or no desired languages.
     """
-    if not dub_status_list:
-        return DubStatus.not_dubbed
+    if not lang_status_list:
+        return LangStatus.none
 
-    if DubStatus.partially_dubbed in dub_status_list or (
-            DubStatus.dubbed in dub_status_list and
-            DubStatus.not_dubbed in dub_status_list):
-        return DubStatus.partially_dubbed
-    elif DubStatus.dubbed not in dub_status_list:
-        return DubStatus.not_dubbed
+    if LangStatus.some in lang_status_list or (
+            LangStatus.all in lang_status_list and
+            LangStatus.none in lang_status_list):
+        return LangStatus.some
+    elif LangStatus.all not in lang_status_list:
+        return LangStatus.none
     else:
-        return DubStatus.dubbed
+        return LangStatus.all
 
 
 class Episode:
@@ -35,15 +36,28 @@ class Episode:
     def __init__(self, ep_file: SonarrEpisodeFile, ep_info: SonarrEpisode):
         self.ep_file = ep_file
         self.ep_info = ep_info
+        self.languages = self._get_languages()
 
-    @property
-    def dub_status(self) -> DubStatus:
-        """Returns dub status for a given episode."""
-        try:
-            languages = self.ep_file.mediaInfo.audioLanguages.split(' / ')
-        except AttributeError:
-            return DubStatus.not_dubbed
-        return DubStatus.dubbed if 'English' in languages else DubStatus.not_dubbed
+    def _get_languages(self):
+        result = []
+        for lang in self.ep_file.mediaInfo.audioLanguages.split(' / '):
+            # Some languages in Sonarr are either not there, or are like this: / Japanese.
+            if lang == '':
+                result.append(None)
+            else:
+                result.append(langcodes.find(lang))
+        return result
+
+    def get_lang_status(self, wanted_langs: list[langcodes.Language]):
+        """Returns language status for a given episode."""
+        status_list = []
+        for lang in wanted_langs:
+            if not lang in self.languages:
+                status_list.append(LangStatus.none)
+            else:
+                status_list.append(LangStatus.all)
+
+        return _check_lang_status(status_list)
 
 
 class Season:
@@ -59,14 +73,13 @@ class Season:
         """Adds an episode to the season."""
         self.episodes.append(episode)
 
-    @property
-    def dub_status(self) -> DubStatus:
-        """Returns dub status for a given season."""
-        dub_status_list = []
+    def get_lang_status(self, wanted_langs: list[langcodes.Language]):
+        """Returns language status for a given season."""
+        status_list = []
         for episode in self.episodes:
-            dub_status_list.append(episode.dub_status)
+            status_list.append(episode.get_lang_status(wanted_langs))
 
-        return _check_dub_status(dub_status_list)
+        return _check_lang_status(status_list)
 
 
 class Series:
@@ -80,13 +93,13 @@ class Series:
     def get_season(self, season_num):
         return self.seasons[season_num]
 
-    @property
-    def dub_status(self) -> DubStatus:
-        dub_status_list = []
+    def get_lang_status(self, wanted_langs: list[langcodes.Language]):
+        """Returns language status for a given series."""
+        status_list = []
         for _, season in self.seasons.items():
-            dub_status_list.append(season.dub_status)
+            status_list.append(season.get_lang_status(wanted_langs))
 
-        return _check_dub_status(dub_status_list)
+        return _check_lang_status(status_list)
 
 
 def split_into_seasons(all_episodes: list) -> dict[int, Season]:

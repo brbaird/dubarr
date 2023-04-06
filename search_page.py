@@ -1,5 +1,6 @@
 import asyncio
 
+import langcodes
 from aiopyarr.exceptions import ArrException
 from aiopyarr.sonarr_client import SonarrClient
 from fuzzywuzzy import fuzz
@@ -8,8 +9,8 @@ from nicegui import events, ui
 import config
 import series_utils as sutils
 
-sonarr_api_url = f'{config.host_url}/api/v3'
 running_queries = []
+wanted_languages = [langcodes.Language.get('en')]
 
 
 def get_series_matches(query, series_list, thresh):
@@ -23,13 +24,13 @@ def get_series_matches(query, series_list, thresh):
     return [x for x in series_list if fuzz.partial_ratio(query.lower(), x.title.lower()) >= thresh]
 
 
-def get_status_color(status: sutils.DubStatus):
-    dub_status_colors = {
-        sutils.DubStatus.dubbed: 'bg-green',
-        sutils.DubStatus.partially_dubbed: 'bg-orange',
-        sutils.DubStatus.not_dubbed: 'bg-red',
+def get_status_color(status: sutils.LangStatus):
+    lang_status_colors = {
+        sutils.LangStatus.all: 'bg-green',
+        sutils.LangStatus.some: 'bg-orange',
+        sutils.LangStatus.none: 'bg-red',
     }
-    return dub_status_colors[status]
+    return lang_status_colors[status]
 
 
 def content():
@@ -79,15 +80,15 @@ def content():
                     for season_num, season in sorted(s.seasons.items()):
                         season_disp_name = "Specials" if season_num == 0 else f'Season {season_num}'
                         with ui.expansion(season_disp_name) \
-                                .classes(f'{get_status_color(season.dub_status)}') \
+                                .classes(f'{get_status_color(season.get_lang_status(wanted_languages))}') \
                                 .props('group=season'):  # Groups expansions together for accordian style
 
                             for ep in season.episodes:
                                 ui.label(f'{ep.ep_info.episodeNumber}. {ep.ep_info.title}') \
-                                    .classes(f'{get_status_color(ep.dub_status)}')
+                                    .classes(f'{get_status_color(ep.get_lang_status(wanted_languages))}')
                     ui.button('Close', on_click=dialog.close)
 
-                color = get_status_color(s.dub_status)
+                color = get_status_color(s.get_lang_status(wanted_languages))
                 with ui.image(f'/image?path={image.url}') \
                         .classes('w-36 hover:cursor-pointer') \
                         .on('click', dialog.open):

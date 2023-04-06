@@ -75,6 +75,9 @@ def content():
                     except ArrException:  # Hate this. Needs better solution
                         return
 
+                if not s.episodes:  # No episodes, we can skip this series
+                    continue
+
                 with ui.dialog() as dialog, ui.card().classes('flex-nowrap items-stretch flex-auto'):
                     ui.label(series.title)
                     for season_num, season in sorted(s.seasons.items()):

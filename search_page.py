@@ -7,6 +7,7 @@ from fuzzywuzzy import fuzz
 from nicegui import events, ui
 
 import config
+import drawers
 import series_utils as sutils
 
 running_queries = []
@@ -114,3 +115,4 @@ def content():
             .on('click', clear_search_field)
     results = ui.row() \
         .classes('flex self-center justify-center')
+    drawers.content(wanted_languages, search, search_field)

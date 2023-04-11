@@ -10,8 +10,30 @@ import config
 import drawers
 import series_utils as sutils
 
-running_queries = []
-wanted_languages = [langcodes.Language.get('en')]
+
+class RunningQueries:
+    def __init__(self):
+        self.queries: list[asyncio.Task] = []
+
+    @property
+    def running(self) -> bool:
+        """Returns True if there are running queries, False if not"""
+        return bool(self.queries)
+
+    async def create_task(self, coro):
+        """Creates and runs a task. First it adds the task to the running queries."""
+        task = asyncio.create_task(coro)
+        self.queries.append(task)
+        return await task
+
+    def cancel(self):
+        """Cancels all running queries"""
+        for query in self.queries:
+            query.cancel()
+
+    def clear(self):
+        """Clears the query list"""
+        self.queries = []
 
 
 def get_series_matches(query, series_list, thresh):
@@ -36,21 +58,19 @@ def get_status_color(status: sutils.LangStatus):
 
 def content():
     """Creates the main page."""
+    rq = RunningQueries()
 
     async def search(e: events.ValueChangeEventArguments | None) -> None:
         """Main searching function. Runs an async request to Sonarr while the user types."""
-        global running_queries
-        if running_queries:
-            for query in running_queries:
-                query.cancel()  # cancel the previous query; happens when you type fast
+        nonlocal rq
+        if rq.running:
+            rq.cancel()
         results.clear()
 
-        # store the http coroutine in a task so we can cancel it later if needed
+        # store the http coroutine in a task, so we can cancel it later if needed
         async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
-            all_series_query = asyncio.create_task(client.async_get_series())
-            running_queries.append(all_series_query)
             try:
-                all_series = await all_series_query
+                all_series = await rq.create_task(client.async_get_series())
             except ArrException:  # Hate this. Needs better solution
                 return
 
@@ -69,10 +89,8 @@ def content():
                 image = [x for x in series.images if x.coverType == 'poster'][0]
 
                 async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
-                    single_series_query = asyncio.create_task(sutils.get_series(client, series))
-                    running_queries.append(single_series_query)
                     try:
-                        s = await single_series_query
+                        s = await rq.create_task(sutils.get_series(client, series))
                     except ArrException:  # Hate this. Needs better solution
                         return
 
@@ -97,7 +115,9 @@ def content():
                         .classes('w-36 hover:cursor-pointer') \
                         .on('click', dialog.open):
                     ui.label(series.title).classes(f'absolute-bottom text-subtitle2 text-center {color}')
-        running_queries = []
+        rq.clear()
+
+    wanted_languages = [langcodes.Language.get('en')]
 
     # For some reason, we can't just ensure_future here. It needs to be delayed.
     ui.timer(interval=0.01, callback=lambda: asyncio.ensure_future(search(None)), once=True)

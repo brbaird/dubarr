@@ -85,6 +85,9 @@ def content():
             if not all_series:
                 return
 
+            # Sort all_series by date added to Sonarr. Will be reimplemented as a drawer item later
+            all_series.sort(key=lambda x: x.added, reverse=True)
+
             for series in all_series:  # iterate over the response data of the api
                 image = [x for x in series.images if x.coverType == 'poster'][0]
 

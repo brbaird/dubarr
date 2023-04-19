@@ -2,38 +2,14 @@ import asyncio
 
 import langcodes
 from aiopyarr.exceptions import ArrException
-from aiopyarr.sonarr_client import SonarrClient
+from aiopyarr.sonarr_client import SonarrClient, SonarrSeries
 from fuzzywuzzy import fuzz
 from nicegui import events, ui
 
 import config
 import drawers
 import series_utils as sutils
-
-
-class RunningQueries:
-    def __init__(self):
-        self.queries: list[asyncio.Task] = []
-
-    @property
-    def running(self) -> bool:
-        """Returns True if there are running queries, False if not"""
-        return bool(self.queries)
-
-    async def create_task(self, coro):
-        """Creates and runs a task. First it adds the task to the running queries."""
-        task = asyncio.create_task(coro)
-        self.queries.append(task)
-        return await task
-
-    def cancel(self):
-        """Cancels all running queries"""
-        for query in self.queries:
-            query.cancel()
-
-    def clear(self):
-        """Clears the query list"""
-        self.queries = []
+import util
 
 
 def get_series_matches(query, series_list, thresh):
@@ -56,25 +32,20 @@ def get_status_color(status: sutils.LangStatus):
     return lang_status_colors[status]
 
 
-def content():
+def content(all_series_orig: list[SonarrSeries]):
     """Creates the main page."""
-    rq = RunningQueries()
+    rq = util.RunningQueries()
+    series_cache = {}  # Used to cache Series instances so that queries don't run on every search
 
-    async def search(e: events.ValueChangeEventArguments | None) -> None:
+    async def _search(e: events.ValueChangeEventArguments | None) -> None:
         """Main searching function. Runs an async request to Sonarr while the user types."""
-        nonlocal rq
+        nonlocal rq, series_cache
         if rq.running:
             rq.cancel()
         results.clear()
 
-        # store the http coroutine in a task, so we can cancel it later if needed
-        async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
-            try:
-                all_series = await rq.create_task(client.async_get_series())
-            except ArrException:  # Hate this. Needs better solution
-                return
-
         with results:
+            all_series = all_series_orig.copy()
             # Filter results to search value
             if e is not None and e.value:
                 all_series = get_series_matches(e.value.lower(), all_series, 75)
@@ -88,14 +59,19 @@ def content():
             # Sort all_series by date added to Sonarr. Will be reimplemented as a drawer item later
             all_series.sort(key=lambda x: x.added, reverse=True)
 
-            for series in all_series:  # iterate over the response data of the api
+            for series in all_series:
+                await asyncio.sleep(0)  # Very important, yield to the loop to allow for task cancelling
                 image = [x for x in series.images if x.coverType == 'poster'][0]
 
-                async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
-                    try:
-                        s = await rq.create_task(sutils.get_series(client, series))
-                    except ArrException:  # Hate this. Needs better solution
-                        return
+                try:
+                    s = series_cache[series.id]
+                except KeyError:
+                    async with SonarrClient(url=config.host_url, api_token=config.api_key, port=config.port) as client:
+                        try:
+                            s = await rq.create_task(sutils.get_series(client, series))
+                            series_cache[series.id] = s
+                        except ArrException:  # Hate this. Needs better solution
+                            return
 
                 if not s.episodes:  # No episodes, we can skip this series
                     continue
@@ -123,7 +99,12 @@ def content():
     wanted_languages = [langcodes.Language.get('en')]
 
     # For some reason, we can't just ensure_future here. It needs to be delayed.
-    ui.timer(interval=0.01, callback=lambda: asyncio.ensure_future(search(None)), once=True)
+    ui.timer(interval=0.01, callback=lambda: asyncio.ensure_future(_search(None)), once=True)
+
+    running_search = util.RunningSearch()
+
+    async def search(*args, **kwargs):
+        running_search.rerun(_search(*args, **kwargs))
 
     # create a search field which is initially focused and leaves space at the top
     with ui.input(on_change=search, placeholder='Search for a show') \

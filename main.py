@@ -3,15 +3,15 @@ from aiopyarr.sonarr_client import SonarrClient
 from nicegui import ui, app
 
 import config
-import image_api
-import search_page
+from dubarr.pages import search_page
+from dubarr.utils import utils
 
 __version__ = 'v0.0.5'
 
 
 @app.get('/image')
 async def get_image(path):
-    return await image_api.get_image(path)
+    return await utils.get_image(path)
 
 
 @ui.page('/')

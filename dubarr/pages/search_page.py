@@ -7,9 +7,8 @@ from fuzzywuzzy import fuzz
 from nicegui import events, ui
 
 import config
-import drawers
-import series_utils as sutils
-import util
+from dubarr.utils import utils, series_utils as sutils
+from . import drawers
 
 
 def get_series_matches(query, series_list, thresh):
@@ -34,7 +33,7 @@ def get_status_color(status: sutils.LangStatus):
 
 def content(all_series_orig: list[SonarrSeries]):
     """Creates the main page."""
-    rq = util.RunningQueries()
+    rq = utils.RunningQueries()
     series_cache = {}  # Used to cache Series instances so that queries don't run on every search
 
     async def _search(e: events.ValueChangeEventArguments | None) -> None:
@@ -101,7 +100,7 @@ def content(all_series_orig: list[SonarrSeries]):
     # For some reason, we can't just ensure_future here. It needs to be delayed.
     ui.timer(interval=0.01, callback=lambda: asyncio.ensure_future(_search(None)), once=True)
 
-    running_search = util.RunningSearch()
+    running_search = utils.RunningSearch()
 
     async def search(*args, **kwargs):
         running_search.rerun(_search(*args, **kwargs))

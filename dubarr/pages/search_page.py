@@ -7,7 +7,7 @@ from fuzzywuzzy import fuzz
 from nicegui import events, ui
 
 import config
-from dubarr.utils import utils, series_utils as sutils
+from dubarr.utils import utils, series_utils as sutils, UNKNOWN_IMAGE_BASE64
 from . import drawers
 
 
@@ -60,7 +60,10 @@ def content(all_series_orig: list[SonarrSeries]):
 
             for series in all_series:
                 await asyncio.sleep(0)  # Very important, yield to the loop to allow for task cancelling
-                image = [x for x in series.images if x.coverType == 'poster'][0]
+                try:
+                    image = [x for x in series.images if x.coverType == 'poster'][0]
+                except IndexError:  # This show doesn't have an image
+                    image = None
 
                 try:
                     s = series_cache[series.id]
@@ -89,7 +92,7 @@ def content(all_series_orig: list[SonarrSeries]):
                     ui.button('Close', on_click=dialog.close)
 
                 color = get_status_color(s.get_lang_status(wanted_languages))
-                with ui.image(f'/image?path={image.url}') \
+                with ui.image(f'/image?path={image.url}' if image is not None else UNKNOWN_IMAGE_BASE64) \
                         .classes('w-36 hover:cursor-pointer') \
                         .on('click', dialog.open):
                     ui.label(series.title).classes(f'absolute-bottom text-subtitle2 text-center {color}')

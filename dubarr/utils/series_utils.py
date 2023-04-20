@@ -45,7 +45,11 @@ class Episode:
             if lang == '':
                 result.append(None)
             else:
-                result.append(langcodes.find(lang))
+                try:
+                    result.append(langcodes.find(lang))
+                except LookupError:
+                    # Handle unknown languages
+                    result.append(None)
         return result
 
     def get_lang_status(self, wanted_langs: list[langcodes.Language]):

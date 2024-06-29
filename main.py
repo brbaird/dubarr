@@ -6,7 +6,7 @@ import config
 from dubarr.pages import search_page
 from dubarr.utils import utils
 
-__version__ = 'v0.0.7'
+__version__ = 'v0.0.8'
 
 
 @app.get('/image')

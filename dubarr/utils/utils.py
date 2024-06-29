@@ -2,6 +2,7 @@ import asyncio
 
 import httpx
 from fastapi.responses import Response
+from urllib import parse
 
 import config
 
@@ -61,5 +62,5 @@ async def get_image(path):
     you would only pass in /MediaCover/39/poster.jpg.
     """
 
-    result = await _api.get(f'{config.host_url}/api{path}')
+    result = await _api.get(parse.urljoin(config.host_url, path))
     return Response(content=result.content, media_type='image/jpeg')

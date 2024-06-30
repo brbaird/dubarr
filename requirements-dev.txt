@@ -4,22 +4,14 @@
 #
 #    pip-compile --extra=dev --output-file=requirements-dev.txt pyproject.toml
 #
-aiofiles==24.1.0
-    # via nicegui
 aiohttp==3.9.5
-    # via
-    #   aiopyarr
-    #   nicegui
-    #   python-socketio
-aiopyarr==23.4.0
+    # via aiopyarr
+aiopyarr==22.11.0
     # via Dubarr (pyproject.toml)
 aiosignal==1.3.1
     # via aiohttp
-annotated-types==0.7.0
-    # via pydantic
 anyio==4.4.0
     # via
-    #   httpx
     #   starlette
     #   watchfiles
 argcomplete==3.3.0
@@ -30,18 +22,15 @@ attrs==23.2.0
     # via aiohttp
 bidict==0.23.1
     # via python-socketio
+bottle==0.12.25
+    # via pywebview
 build==1.2.1
     # via pip-tools
-certifi==2024.6.2
-    # via
-    #   httpcore
-    #   httpx
-    #   requests
+cfgv==3.4.0
+    # via pre-commit
 charset-normalizer==3.3.2
-    # via
-    #   commitizen
-    #   requests
-ciso8601==2.3.1
+    # via commitizen
+ciso8601==2.3.0
     # via Dubarr (pyproject.toml)
 click==8.1.7
     # via
@@ -51,14 +40,26 @@ colorama==0.4.6
     # via commitizen
 commitizen==3.27.0
     # via Dubarr (pyproject.toml)
+contourpy==1.2.1
+    # via matplotlib
+cycler==0.12.1
+    # via matplotlib
 decli==0.6.2
     # via commitizen
-docutils==0.19
-    # via nicegui
+distlib==0.3.8
+    # via virtualenv
 exceptiongroup==1.2.1
     # via anyio
-fastapi==0.109.2
+fastapi==0.92.0
+    # via
+    #   fastapi-socketio
+    #   nicegui
+fastapi-socketio==0.0.10
     # via nicegui
+filelock==3.15.4
+    # via virtualenv
+fonttools==4.53.0
+    # via matplotlib
 frozenlist==1.4.1
     # via
     #   aiohttp
@@ -67,99 +68,130 @@ fuzzywuzzy==0.18.0
     # via Dubarr (pyproject.toml)
 h11==0.14.0
     # via
-    #   httpcore
     #   uvicorn
     #   wsproto
-httpcore==1.0.5
-    # via httpx
 httptools==0.6.1
     # via uvicorn
-httpx==0.27.0
-    # via nicegui
+identify==2.5.36
+    # via pre-commit
 idna==3.7
     # via
     #   anyio
-    #   httpx
-    #   requests
     #   yarl
-ifaddr==0.2.0
-    # via nicegui
-importlib-metadata==7.2.1
-    # via commitizen
-itsdangerous==2.2.0
-    # via nicegui
+importlib-metadata==6.11.0
+    # via
+    #   commitizen
+    #   nicegui
 jinja2==3.1.4
     # via
     #   commitizen
     #   nicegui
-langcodes==3.4.0
+kiwisolver==1.4.5
+    # via matplotlib
+langcodes==3.3.0
     # via Dubarr (pyproject.toml)
-language-data==1.2.0
-    # via langcodes
-levenshtein==0.25.1
+levenshtein==0.20.9
     # via python-levenshtein
-marisa-trie==1.2.0
-    # via language-data
 markdown2==2.4.13
     # via nicegui
 markupsafe==2.1.5
     # via jinja2
+matplotlib==3.9.0
+    # via nicegui
 multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-nicegui==1.4.28
+nicegui==1.2.2
     # via Dubarr (pyproject.toml)
+nodeenv==1.9.1
+    # via pre-commit
+numpy==2.0.0
+    # via
+    #   contourpy
+    #   matplotlib
 orjson==3.10.5
     # via nicegui
 packaging==24.1
     # via
     #   build
     #   commitizen
+    #   matplotlib
+    #   plotly
+pillow==10.3.0
+    # via matplotlib
 pip-tools==7.4.1
+    # via Dubarr (pyproject.toml)
+platformdirs==4.2.2
+    # via virtualenv
+plotly==5.22.0
+    # via nicegui
+pre-commit==3.7.1
     # via Dubarr (pyproject.toml)
 prompt-toolkit==3.0.36
     # via questionary
+proxy-tools==0.1.0
+    # via pywebview
 pscript==0.7.7
     # via vbuild
-pydantic==2.7.4
+pydantic==1.10.17
     # via fastapi
-pydantic-core==2.18.4
-    # via pydantic
 pygments==2.18.0
     # via nicegui
+pyobjc-core==10.3.1
+    # via
+    #   pyobjc-framework-cocoa
+    #   pyobjc-framework-security
+    #   pyobjc-framework-webkit
+    #   pywebview
+pyobjc-framework-cocoa==10.3.1
+    # via
+    #   pyobjc-framework-security
+    #   pyobjc-framework-webkit
+    #   pywebview
+pyobjc-framework-security==10.3.1
+    # via pywebview
+pyobjc-framework-webkit==10.3.1
+    # via pywebview
+pyparsing==3.1.2
+    # via matplotlib
 pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
+python-dateutil==2.9.0.post0
+    # via matplotlib
 python-dotenv==1.0.1
     # via uvicorn
 python-engineio==4.9.1
     # via python-socketio
-python-levenshtein==0.25.1
+python-levenshtein==0.20.9
     # via Dubarr (pyproject.toml)
-python-multipart==0.0.9
+python-multipart==0.0.6
     # via nicegui
-python-socketio[asyncio-client]==5.11.3
+python-socketio==5.11.3
+    # via fastapi-socketio
+pywebview==4.4.1
     # via nicegui
 pyyaml==6.0.1
     # via
     #   commitizen
+    #   pre-commit
     #   uvicorn
 questionary==2.0.1
     # via commitizen
-rapidfuzz==3.9.3
+rapidfuzz==2.15.2
     # via levenshtein
-requests==2.32.3
-    # via nicegui
 simple-websocket==1.0.0
     # via python-engineio
+six==1.16.0
+    # via python-dateutil
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   httpx
-starlette==0.36.3
+    # via anyio
+starlette==0.25.0
     # via fastapi
+tenacity==8.4.2
+    # via plotly
 termcolor==2.4.0
     # via commitizen
 tomli==2.0.1
@@ -171,20 +203,18 @@ tomlkit==0.12.5
 typing-extensions==4.12.2
     # via
     #   anyio
-    #   fastapi
     #   nicegui
     #   pydantic
-    #   pydantic-core
-    #   uvicorn
-urllib3==2.2.2
-    # via requests
-uvicorn[standard]==0.30.1
+    #   pywebview
+uvicorn[standard]==0.20.0
     # via nicegui
 uvloop==0.19.0
     # via uvicorn
 vbuild==0.8.2
     # via nicegui
-watchfiles==0.22.0
+virtualenv==20.26.3
+    # via pre-commit
+watchfiles==0.18.1
     # via
     #   nicegui
     #   uvicorn

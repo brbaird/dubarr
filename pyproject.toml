@@ -3,18 +3,19 @@ name = "Dubarr"
 version = "0.0.9"
 description = "View dub status of shows in Sonarr."
 dependencies = [
-    'nicegui',
-    'aiopyarr',
-    'ciso8601',
-    'fuzzywuzzy',
-    'python-Levenshtein',
-    'langcodes',
+    'nicegui==1.2.2',
+    'aiopyarr==22.11.0',
+    'ciso8601==2.3.0',
+    'fuzzywuzzy==0.18.0',
+    'python-Levenshtein==0.20.9',
+    'langcodes==3.3.0',
 ]
 
 [project.optional-dependencies]
 dev = [
     'commitizen',
     'pip-tools',
+    'pre-commit',
 ]
 
 [tool.commitizen]

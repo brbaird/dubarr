@@ -1,0 +1,26 @@
+[project]
+name = "Dubarr"
+version = "0.0.8"
+description = "View dub status of shows in Sonarr."
+dependencies = [
+    'nicegui',
+    'aiopyarr',
+    'ciso8601',
+    'fuzzywuzzy',
+    'python-Levenshtein',
+    'langcodes',
+]
+
+[project.optional-dependencies]
+dev = [
+    'commitizen',
+    'pip-tools',
+]
+
+[tool.commitizen]
+version = "0.0.8"
+tag_format = "v$version"
+major_version_zero = true
+version_files = [
+    "pyproject.toml:version",
+]

@@ -1,8 +1,8 @@
 import asyncio
+from urllib import parse
 
 import httpx
 from fastapi.responses import Response
-from urllib import parse
 
 import config
 

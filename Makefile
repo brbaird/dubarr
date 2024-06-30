@@ -5,7 +5,7 @@ install:
 
 compile:
 	@rm -f requirements*.txt
-	@pip-compile pyproject.toml \
+	@pip-compile -v pyproject.toml \
  	--unsafe-package pyobjc-core \
  	--unsafe-package pyobjc-framework-cocoa \
  	--unsafe-package pyobjc-framework-security \

@@ -3,8 +3,8 @@ from aiopyarr.sonarr_client import SonarrClient
 from nicegui import ui, app
 
 import config
-from dubarr.pages import search_page
-from dubarr.utils import utils
+from src.dubarr.pages import search_page
+from src.dubarr.utils import utils
 
 
 @app.get('/image')

@@ -40,13 +40,13 @@ class Episode:
 
     def _get_languages(self):
         result = []
-        for lang in self.ep_file.mediaInfo.audioLanguages.split(' / '):
+        for lang in self.ep_file.mediaInfo.audioLanguages.split('/'):
             # Some languages in Sonarr are either not there, or are like this: / Japanese.
             if lang == '':
                 result.append(None)
             else:
                 try:
-                    result.append(langcodes.find(lang))
+                    result.append(langcodes.get(lang))
                 except LookupError:
                     # Handle unknown languages
                     result.append(None)

@@ -7,7 +7,7 @@ from fuzzywuzzy import fuzz
 from nicegui import events, ui
 
 import config
-from dubarr.utils import utils, series_utils as sutils, UNKNOWN_IMAGE_BASE64
+from src.dubarr.utils import utils, series_utils as sutils, UNKNOWN_IMAGE_BASE64
 from . import drawers
 
 

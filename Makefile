@@ -19,3 +19,6 @@ compile:
 
 sync:
 	@pip-sync requirements*.txt
+
+mount:
+	-./mount.sh	 # Must define your own mount.sh

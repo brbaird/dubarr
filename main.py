@@ -24,4 +24,4 @@ async def index_page():
     search_page.content(all_series)
 
 
-ui.run(title='Dubarr', dark=True, reload=config.reload, show=False)
+ui.run(title='Dubarr', dark=True, reload=config.reload, show=False, port=config.server_port)

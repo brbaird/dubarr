@@ -4,12 +4,16 @@
 #
 #    pip-compile pyproject.toml
 #
+aiofiles==23.2.1
+    # via nicegui
 aiohttp==3.9.5
     # via aiopyarr
 aiopyarr==22.11.0
     # via Dubarr (pyproject.toml)
 aiosignal==1.3.1
     # via aiohttp
+annotated-types==0.7.0
+    # via pydantic
 anyio==4.4.0
     # via
     #   starlette
@@ -32,7 +36,7 @@ cycler==0.12.1
     # via matplotlib
 exceptiongroup==1.2.1
     # via anyio
-fastapi==0.92.0
+fastapi==0.110.3
     # via
     #   fastapi-socketio
     #   nicegui
@@ -58,6 +62,8 @@ idna==3.7
     #   yarl
 importlib-metadata==6.11.0
     # via nicegui
+itsdangerous==2.2.0
+    # via nicegui
 jinja2==3.1.4
     # via nicegui
 kiwisolver==1.4.5
@@ -76,7 +82,7 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-nicegui==1.2.2
+nicegui==1.2.24
     # via Dubarr (pyproject.toml)
 numpy==2.0.0
     # via
@@ -96,8 +102,10 @@ proxy-tools==0.1.0
     # via pywebview
 pscript==0.7.7
     # via vbuild
-pydantic==1.10.17
+pydantic==2.7.4
     # via fastapi
+pydantic-core==2.18.4
+    # via pydantic
 pygments==2.18.0
     # via nicegui
 pyobjc-core==10.3.1
@@ -141,15 +149,17 @@ six==1.16.0
     # via python-dateutil
 sniffio==1.3.1
     # via anyio
-starlette==0.25.0
+starlette==0.37.2
     # via fastapi
 tenacity==8.4.2
     # via plotly
 typing-extensions==4.12.2
     # via
     #   anyio
+    #   fastapi
     #   nicegui
     #   pydantic
+    #   pydantic-core
     #   pywebview
 uvicorn[standard]==0.20.0
     # via nicegui

@@ -3,7 +3,7 @@ name = "Dubarr"
 version = "0.0.10"
 description = "View dub status of shows in Sonarr."
 dependencies = [
-    'nicegui==1.2.2',
+    'nicegui~=1.2.2',
     'aiopyarr==22.11.0',
     'ciso8601==2.3.0',
     'fuzzywuzzy==0.18.0',

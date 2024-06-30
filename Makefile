@@ -3,10 +3,19 @@ install:
 	-r requirements.txt \
 	-r requirements-dev.txt
 
-compile_reqs:
+compile:
 	@rm -f requirements*.txt
-	@pip-compile pyproject.toml
-	@pip-compile -o requirements-dev.txt --extra dev pyproject.toml
+	@pip-compile pyproject.toml \
+ 	--unsafe-package pyobjc-core \
+ 	--unsafe-package pyobjc-framework-cocoa \
+ 	--unsafe-package pyobjc-framework-security \
+ 	--unsafe-package pyobjc-framework-webkit
+	@pip-compile -o requirements-dev.txt --extra dev \
+ 	--unsafe-package pyobjc-core \
+ 	--unsafe-package pyobjc-framework-cocoa \
+ 	--unsafe-package pyobjc-framework-security \
+ 	--unsafe-package pyobjc-framework-webkit \
+ 	pyproject.toml
 
-sync_reqs:
+sync:
 	@pip-sync requirements*.txt

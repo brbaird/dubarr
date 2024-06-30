@@ -1,6 +1,6 @@
 [project]
 name = "Dubarr"
-version = "0.0.9"
+version = "0.0.10"
 description = "View dub status of shows in Sonarr."
 dependencies = [
     'nicegui==1.2.2',
@@ -19,7 +19,7 @@ dev = [
 ]
 
 [tool.commitizen]
-version = "0.0.9"
+version = "0.0.10"
 tag_format = "v$version"
 major_version_zero = true
 version_files = [
